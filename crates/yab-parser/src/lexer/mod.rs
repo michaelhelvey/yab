@@ -85,7 +85,6 @@ pub fn tokenize(src: &str, file_name: impl Into<String>) -> Result<Vec<Token>> {
         }
 
         if let Some(parse_result) = ident::try_parse_identifier(&mut chars)? {
-            eprintln!("parse_result: {:?}", parse_result);
             match parse_result {
                 IdentParseResult::Identifier(ident) => {
                     tokens.push(Token::Ident(ident));
@@ -121,7 +120,7 @@ pub fn tokenize(src: &str, file_name: impl Into<String>) -> Result<Vec<Token>> {
             }
         }
 
-        if let Some(regexp) = regex::try_parse_regex_literal(&mut chars)? {
+        if let Some(regexp) = regex::try_parse_regex_literal(&mut chars, tokens.last())? {
             tokens.push(Token::RegexLiteral(regexp));
             continue 'outer;
         }
@@ -167,6 +166,23 @@ mod tests {
     };
 
     use super::*;
+
+    #[test]
+    fn test_regex_precendence() {
+        let src = r#"
+            (1) / 2
+        "#;
+        assert_eq!(
+            tokenize(src, "script.js").unwrap(),
+            vec![
+                Token::Punctuation(Punctuation::new(PunctuationType::OpenParen)),
+                Token::NumericLiteral(NumberLiteral::new(NumberLiteralValue::Primitive(1.0))),
+                Token::Punctuation(Punctuation::new(PunctuationType::CloseParen)),
+                Token::Operator(Operator::new(OperatorType::Division)),
+                Token::NumericLiteral(NumberLiteral::new(NumberLiteralValue::Primitive(2.0))),
+            ]
+        )
+    }
 
     #[test]
     fn test_file_tokenization() {

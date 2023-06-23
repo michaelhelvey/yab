@@ -51,7 +51,7 @@ pub enum PunctuationType {
 
 #[derive(Debug, Serialize, PartialEq)]
 pub struct Punctuation {
-    kind: PunctuationType,
+    pub kind: PunctuationType,
 }
 
 impl Punctuation {
